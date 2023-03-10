@@ -15,10 +15,10 @@ owenTemperature::owenTemperature (double _typeConst, IndoorType _type)
     
     switch(type)
     {
-        case  METAL_BOX     : this->typeConst = _typeConst * 1.11 ; break;
+        case  METAL_BOX     : this->typeConst = _typeConst * 1.00 ; break;
         case  PLASTIC_BOX   : this->typeConst = _typeConst * 1.22 ; break;
         case  OPEN_BOX      : this->typeConst = _typeConst * 1.33 ; break;
-        default:              this->typeConst = _typeConst * 1    ; break;
+        default:              this->typeConst = _typeConst * 2    ; break;
     }
 }
 
@@ -28,16 +28,16 @@ heaterTemperature::heaterTemperature (double _typeConst, OutdoorType _type)
     
     switch(type)
     {
-        case  OPEN_AREA     : this->typeConst = _typeConst * 1.44 ; break;
+        case  OPEN_AREA     : this->typeConst = _typeConst * 1.00 ; break;
         case  FACTORY_AREA  : this->typeConst = _typeConst * 1.55 ; break;
         case  HOME          : this->typeConst = _typeConst * 1.66 ; break;
-        default:              this->typeConst = _typeConst * 1    ; break;
+        default:              this->typeConst = _typeConst * 2    ; break;
     }
     
 }
 
 
-double owenTemperature::returnTemp( int inputBuffer[] )
+double owenTemperature::returnTemp( int inputBuffer[] , int inputCount )
 {
     double temperatureHandle = 0;
     
@@ -46,10 +46,14 @@ double owenTemperature::returnTemp( int inputBuffer[] )
         temperatureHandle += inputBuffer[loopVal];
     }
     
-    return ( ( temperatureHandle / 10.0 ) * this->owenTempConst ) ;
+    if( temperatureHandle == 0 && inputCount == 0 ) return 0;
+    else
+    {
+        return ( ( temperatureHandle / inputCount ) * this->owenTempConst * this->typeConst ) ;
+    }
 }
 
-double heaterTemperature::returnTemp( int inputBuffer[] )
+double heaterTemperature::returnTemp( int inputBuffer[] , int inputCount )
 {
     double temperatureHandle = 0;
     
@@ -58,7 +62,11 @@ double heaterTemperature::returnTemp( int inputBuffer[] )
         temperatureHandle += inputBuffer[loopVal];
     }
     
-    return ( ( temperatureHandle / 10.0 ) * this->heaterTempConst ) ;
+    if( temperatureHandle == 0 && inputCount == 0 ) return 0;
+    else
+    {
+        return ( ( temperatureHandle / inputCount ) * this->heaterTempConst * this->typeConst ) ;
+    }
 }
 
 /* State Machine Configurations */
@@ -94,8 +102,8 @@ int main ()
           case MAINState_INIT : 
           
             /* Create object for temperature */
-            owenTemp      = new owenTemperature( 2.55 , OPEN_BOX );
-            heaterTemp    = new heaterTemperature( 3.22 , FACTORY_AREA );
+            owenTemp      = new owenTemperature( 1.00 , METAL_BOX );
+            heaterTemp    = new heaterTemperature( 1.00 , OPEN_AREA );
           
             cout << "Init succesfull Class 0 is OWEN , Class 1 is HEATER " << endl;
           
@@ -112,11 +120,11 @@ int main ()
             {
                 if( classCount == OWEN )
                 {
-                    cout << "Enter 10 Owen Parameters " << endl;
+                    cout << "Enter " << SIZEOFBUFFER << " Owen Parameters " << endl;
                 }
                 else if( classCount == HEATER )
                 {
-                    cout << "Enter 10 Heater Parameters " << endl;
+                    cout << "Enter " << SIZEOFBUFFER << " Heater Parameters " << endl;
                 }
                 else
                 {
@@ -127,7 +135,7 @@ int main ()
                 
                 for(int loopVal = 0 ; loopVal < SIZEOFBUFFER ; loopVal++)
                 {
-                    cout << "Enter Class " << classCount << " Raw Data " << loopVal << " = " << endl;
+                    cout << "Enter Class " << classCount << " Raw Data " << loopVal + 1 << " = " << endl;
                     /* Enter Raw Datas */
                     cin >> rawData[classCount][loopVal];
                     
@@ -173,9 +181,10 @@ int main ()
           /* Process State Activated */
           cout << "Process State is Running !" << endl;
           
+          
           /* Process State for print variables */
-          cout << "OWEN TEMP SENSOR VALUE   = " << owenTemp->returnTemp( &rawData[OWEN][0] )   << endl;
-          cout << "HEATER TEMP SENSOR VALUE = " << heaterTemp->returnTemp( &rawData[HEATER][0] ) << endl;
+          cout << "OWEN TEMP SENSOR VALUE * COEFFICIENTS   = " << owenTemp->returnTemp( &rawData[OWEN][0]     , SIZEOFBUFFER )   << endl;
+          cout << "HEATER TEMP SENSOR VALUE * COEFFICIENTS = " << heaterTemp->returnTemp( &rawData[HEATER][0] , SIZEOFBUFFER ) << endl;
           
           MAINState = MAINState_ROUTINE;
           
