@@ -7,7 +7,7 @@
 using namespace std;
 
 #define SIZEOFBUFFER        6
-#define SIZEOFTEMPCLASS     2   /* Owen & Heater */
+#define SIZEOFTEMPCLASS     2   /* Owen & Heaterr */
 
 #define IDEAL_OWEN_CONST    1
 #define IDEAL_HEATER_CONST  1
